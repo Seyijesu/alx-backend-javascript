@@ -1,20 +1,31 @@
-/* eslint-disable no-unused-vars */
 import signUpUser from './4-user-promise';
 import uploadPhoto from './5-photo-reject';
 
-export default async function handleProfileSignup(firstName, lastName, fileName) {
-  const userName = signUpUser(firstName, lastName);
-  const userPic = uploadPhoto(fileName);
+export default async function handleProfileSignup(
+  firstName,
+  lastName,
+  fileName,
+) {
+  const res = [];
+  try {
+    const user = await signUpUser(firstName, lastName);
+    res.push({ status: 'fulfilled', value: user });
+  } catch (err) {
+    res.push({
+      status: 'rejected',
+      value: err.toString(),
+    });
+  }
 
-  const info = await Promise.allSettled([userName, userPic])
-    .then((response) => response.map((response) => {
-      if (response.status !== 'fulfilled') {
-        return {
-          status: 'rejected',
-          value: response.reason.toString(),
-        };
-      }
-      return response;
-    }));
-  return Promise.resolve(info);
+  try {
+    const upload = await uploadPhoto(fileName);
+    res.push({ status: 'fulfilled', value: upload });
+  } catch (err) {
+    res.push({
+      status: 'rejected',
+      value: err.toString(),
+    });
+  }
+
+  return res;
 }
